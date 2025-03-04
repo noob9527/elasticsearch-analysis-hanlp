@@ -8,6 +8,14 @@ HanLP Analyzer for ElasticSearch
 
 此分词器基于[HanLP](http://www.hankcs.com/nlp)，提供了HanLP中大部分的分词方式。
 
+### es upgrade issue
+`permission java.io.FilePermission` is not allowed in es8.x?
+- https://github.com/elastic/elasticsearch/issues/69464
+- https://github.com/elastic/elasticsearch/issues/74275
+- https://github.com/KennFalcon/elasticsearch-analysis-hanlp/issues/117
+- https://www.elastic.co/guide/en/elasticsearch/plugins/current/creating-classic-plugins.html
+###
+
 今年一年都在忙其他事，所以插件更新基本一年没有更新，年底更新一波。今年学习了一下ES向量插件（亚马逊设计的那个方式还挺有意思的，重新设计向量索引文件，但文件管理依托于lucene），搞了搞知识图谱（JanusGraph），最近又在弄ES存储计算分离（基于共享存储）
 
 🚩 更新日志：

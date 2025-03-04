@@ -49,9 +49,22 @@ public class AnalysisHanLPPlugin extends Plugin implements AnalysisPlugin {
         if (home == null) {
             throw new IllegalStateException(Environment.PATH_HOME_SETTING.getKey() + " is not configured");
         } else {
-            Path configDir = PathUtils.get(home, "config", AnalysisHanLPPlugin.PLUGIN_NAME);
-            Predefine.HANLP_PROPERTIES_PATH = configDir.resolve(CONFIG_FILE_NAME).toString();
-            logger.debug("hanlp properties path: {}", Predefine.HANLP_PROPERTIES_PATH);
+            // // // Set up plugin paths
+            // Path pluginsDir = PathUtils.get(home, "plugins", PLUGIN_NAME);
+            // Path configDir = PathUtils.get(home, "config", PLUGIN_NAME);
+
+            // // // Set HanLP root path to the plugin directory
+            // System.setProperty("hanlp.root", pluginsDir.toString());
+
+            // // // Set HanLP properties path
+            // Predefine.HANLP_PROPERTIES_PATH = configDir.resolve(CONFIG_FILE_NAME).toString();
+
+            // logger.debug("HanLP root path: {}", System.getProperty("hanlp.root"));
+            // logger.debug("HanLP properties path: {}", Predefine.HANLP_PROPERTIES_PATH);
+
+           Path configDir = PathUtils.get(home, "config", AnalysisHanLPPlugin.PLUGIN_NAME);
+           Predefine.HANLP_PROPERTIES_PATH = configDir.resolve(CONFIG_FILE_NAME).toString();
+           logger.debug("hanlp properties path: {}", Predefine.HANLP_PROPERTIES_PATH);
         }
     }
 
@@ -115,4 +128,5 @@ public class AnalysisHanLPPlugin extends Plugin implements AnalysisPlugin {
 
         return extra;
     }
+
 }
