@@ -1,7 +1,7 @@
 buildscript {
     repositories {
+        maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
-        jcenter()
     }
     dependencies {
         classpath "org.elasticsearch.gradle:build-tools:${elasticsearchVersion}"
@@ -12,9 +12,26 @@ group = 'org.elasticsearch'
 version = "$elasticsearchVersion"
 description = 'elasticsearch-analysis-hanlp'
 
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'idea'
 apply plugin: 'elasticsearch.esplugin'
+
+// Configure Java toolchain
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// Add repositories for dependency resolution
+repositories {
+    mavenCentral()
+    maven { url "https://repo.maven.apache.org/maven2/" }
+    // For ES dependencies
+    maven { url "https://artifacts.elastic.co/maven/" }
+}
 
 esplugin {
     name 'analysis-hanlp'
@@ -24,52 +41,55 @@ esplugin {
     noticeFile = rootProject.file('NOTICE.txt')
 }
 
-jar {
-    archiveBaseName.set(rootProject.name)
+// Customize jar task
+tasks.named('jar') {
+    archiveBaseName = rootProject.name
 }
 
-javadocJar {
-    archiveBaseName.set(rootProject.name)
-}
-
-sourcesJar {
-    archiveBaseName.set(rootProject.name)
-}
-
-assemble {
+// Customize assemble task to rename the created zip file
+tasks.named('assemble') {
     doLast {
-        file("build/distributions/analysis-hanlp-${elasticsearchVersion}.zip").renameTo(file("build/distributions/${rootProject.name}-${elasticsearchVersion}.zip"))
-        ant.checksum file: "build/distributions/${rootProject.name}-${elasticsearchVersion}.zip"
+        File zipFile = file("build/distributions/analysis-hanlp-${elasticsearchVersion}.zip")
+        if (zipFile.exists()) {
+            zipFile.renameTo(file("build/distributions/${rootProject.name}-${elasticsearchVersion}.zip"))
+            ant.checksum file: "build/distributions/${rootProject.name}-${elasticsearchVersion}.zip"
+        }
     }
 }
 
-configurations.all() {
-    Configuration configuration ->
-        configuration.resolutionStrategy.failOnVersionConflict()
-        configuration.resolutionStrategy.force(['commons-codec:commons-codec:1.15'])
-        configuration.resolutionStrategy.force(['commons-logging:commons-logging:1.2'])
-        configuration.resolutionStrategy.force(['org.apache.httpcomponents:httpclient:4.5.13'])
-        configuration.resolutionStrategy.force(['org.apache.httpcomponents:httpcore:4.4.14'])
+// Configure dependencies and resolution strategy
+configurations.all {
+    resolutionStrategy {
+        failOnVersionConflict()
+        force 'commons-codec:commons-codec:1.15'
+        force 'commons-logging:commons-logging:1.2'
+        force 'org.apache.httpcomponents:httpclient:4.5.13'
+        force 'org.apache.httpcomponents:httpcore:4.4.14'
+    }
 }
 
 dependencies {
-    compile 'com.hankcs:hanlp:portable-1.7.8'
-    compile 'commons-codec:commons-codec:1.15'
-    compile 'commons-logging:commons-logging:1.2'
-    compile 'org.apache.httpcomponents:httpclient:4.5.13'
-    compile 'org.apache.httpcomponents:httpcore:4.4.14'
+    implementation 'com.hankcs:hanlp:portable-1.8.6'
+    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.14'
 }
 
-checkstyle {
-    sourceSets = [project.sourceSets.main]
+// Safely configure tasks only if they exist
+def configureTaskIfExists = { taskName, configurationClosure ->
+    def task = tasks.findByName(taskName)
+    if (task != null) {
+        task.configure(configurationClosure)
+    }
 }
 
-checkstyleMain {
-    excludes = ['**/PorterStemmer.java']
+configureTaskIfExists('checkstyleMain') { task ->
+    task.excludes = ['**/PorterStemmer.java']
 }
 
-forbiddenApisMain {
-    excludes = [
+configureTaskIfExists('forbiddenApisMain') { task ->
+    task.excludes = [
             '**/AnalysisHanLPPlugin.class',
             '**/PorterStemmer.class',
             '**/RemoteDictConfig.class',
@@ -80,38 +100,28 @@ forbiddenApisMain {
     ]
 }
 
-forbiddenPatterns {
-    forbiddenPatterns.enabled = false;
+// Safe handling of plugin extensions
+def configureEnabledIfExists = { extensionName, value ->
+    def extension = project.extensions.findByName(extensionName)
+    if (extension != null) {
+        extension.enabled = value
+    }
 }
 
-licenseHeaders {
-    licenseHeaders.enabled = false
-}
+configureEnabledIfExists('forbiddenPatterns', false)
+configureEnabledIfExists('licenseHeaders', false)
+configureEnabledIfExists('dependencyLicenses', false)
+configureEnabledIfExists('thirdPartyAudit', false)
+configureEnabledIfExists('validateNebulaPom', false)
+configureEnabledIfExists('loggerUsageCheck', false)
+configureEnabledIfExists('testingConventions', false)
 
-dependencyLicenses {
-    dependencyLicenses.enabled = false
-}
-
-thirdPartyAudit {
-    thirdPartyAudit.enabled = false
-}
-
-validateNebulaPom {
-    validateNebulaPom.enabled = false
-}
-
-loggerUsageCheck {
-    loggerUsageCheck.enabled = false
-}
-
-test {
+// Configure test tasks
+tasks.withType(Test).configureEach {
     systemProperty 'tests.security.manager', 'false'
 }
 
-testingConventions {
-    testingConventions.enabled = false
-}
-
-javadoc {
+// Disable Javadoc tasks
+tasks.withType(Javadoc).configureEach {
     enabled = false
 }
