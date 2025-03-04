@@ -1,7 +1,6 @@
 package com.hankcs.cfg;
 
 import com.hankcs.dic.Dictionary;
-import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 
@@ -49,7 +48,6 @@ public class Configuration {
 
     private boolean enableCustomConfig;
 
-    @Inject
     public Configuration(Environment env, Settings settings) {
         this.environment = env;
         this.settings = settings;
